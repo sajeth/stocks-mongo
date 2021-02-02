@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.saji.stocks.mongo</groupId>
+    <artifactId>stocks-mongo</artifactId>
+    <version>7.0.0</version>
+    <packaging>jar</packaging>
+    <name>stocks-mongo</name>
+    <parent>
+        <groupId>com.saji.stocks.parent</groupId>
+        <artifactId>
+            stocks-parent
+        </artifactId>
+        <version>0.0.1</version>
+    </parent>
+    <dependencies>
+        <dependency>
+            <groupId>com.saji.stocks.redis</groupId>
+            <artifactId>stocks-redis</artifactId>
+            <version>${stocks.redis.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.saji.stocks.analysis</groupId>
+                    <artifactId>stocks-analysis</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.saji.stocks.core</groupId>
+            <artifactId>stocks-core</artifactId>
+            <version>${stocks.core.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.saji.stocks.analysis</groupId>
+                    <artifactId>stocks-analysis</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.saji.stocks.analysis</groupId>
+            <artifactId>stocks-analysis</artifactId>
+            <version>${stocks.analysis.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb</artifactId>
+            <version>${spring.boot.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.saji.stocks.candle</groupId>
+            <artifactId>stocks-candlesticks</artifactId>
+            <version>${stocks.candlesticks.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.saji.stocks.finance</groupId>
+            <artifactId>stocks-finance</artifactId>
+            <version>${stocks.finance.version}</version>
+        </dependency>
+    </dependencies>
+</project>
