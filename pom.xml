@@ -17,6 +17,17 @@
     </parent>
     <dependencies>
         <dependency>
+            <groupId>com.saji.stocks.business</groupId>
+            <artifactId>stocks-business</artifactId>
+            <version>${stocks.business.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.saji.stocks.finance</groupId>
+                    <artifactId>stocks-finance</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
             <groupId>com.saji.stocks.redis</groupId>
             <artifactId>stocks-redis</artifactId>
             <version>${stocks.redis.version}</version>
@@ -39,6 +50,11 @@
             </exclusions>
         </dependency>
         <dependency>
+            <groupId>com.saji.stocks.analysis</groupId>
+            <artifactId>stocks-analysis</artifactId>
+            <version>${stocks.analysis.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-mongodb</artifactId>
             <version>${spring.boot.version}</version>
@@ -47,17 +63,11 @@
             <groupId>com.saji.stocks.candle</groupId>
             <artifactId>stocks-candlesticks</artifactId>
             <version>${stocks.candlesticks.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.saji.stocks.finance</groupId>
-                    <artifactId>stocks-finance</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.saji.stocks.business</groupId>
-            <artifactId>stocks-business</artifactId>
-            <version>${stocks.business.version}</version>
+            <groupId>com.saji.stocks.finance</groupId>
+            <artifactId>stocks-finance</artifactId>
+            <version>${stocks.finance.version}</version>
         </dependency>
     </dependencies>
 </project>
