@@ -1,14 +1,14 @@
 package com.saji.stocks.mongo.services;
 
-import com.saji.stocks.business.services.FinanceService;
+import com.saji.stocks.business.services.IFinance;
 import com.saji.stocks.candle.pojo.StocksMetaData;
-import com.saji.stocks.core.services.stock.IStock;
 import com.saji.stocks.finance.yahoo.Stock;
 import com.saji.stocks.finance.yahoo.YahooFinance;
 import com.saji.stocks.finance.yahoo.histquotes.HistoricalQuote;
 import com.saji.stocks.finance.yahoo.histquotes.Interval;
 import com.saji.stocks.finance.yahoo.quotes.stock.StockQuote;
 import com.saji.stocks.finance.yahoo.quotes.stock.StockStats;
+import com.saji.stocks.mongo.pojos.StockData;
 import com.saji.stocks.redis.services.IRedis;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static com.saji.stocks.candle.services.CandleStickService.determineMetaData;
 import static com.saji.stocks.mongo.util.DateUtil.getFirstDayOfWeek;
@@ -35,20 +36,18 @@ public class StockDataService implements IStockData {
 
     private final Logger log = Logger.getLogger("StockDataService");
     private IService iService;
-    private IStock iStock;
     private IRedis iRedis;
     @Value("${stock.data.years}")
     private int years;
     private MathContext mx;
-    private FinanceService financeService;
+    private IFinance iFinance;
 
     @Autowired
-    private StockDataService(@Lazy IService iService, @Lazy IRedis iRedis, @Lazy IStock iStock, @Value("${stock.data.precision}") int precision, @Lazy FinanceService financeService) {
+    private StockDataService(@Lazy IService iService, @Lazy IRedis iRedis, @Value("${stock.data.precision}") int precision, @Lazy IFinance iFinance) {
         this.iService = iService;
         this.iRedis = iRedis;
-        this.iStock = iStock;
         this.mx = new MathContext(precision);
-        this.financeService = financeService;
+        this.iFinance = iFinance;
     }
 
     @Async
@@ -76,12 +75,14 @@ public class StockDataService implements IStockData {
         try {
 
             Stock stock = getHistoryByInterval(symbol, Interval.MONTHLY, getSecondDayOfMonth());
-            List<HistoricalQuote> list = stock.getHistory();
-            iService.addMonthly(symbol, stock.getUrl().get(1));
-            StocksMetaData metaData = new StocksMetaData();
-            determineMetaData(metaData, list, stock.getQuote(true));
-            iRedis.addMonthlyStock(symbol, metaData);
-
+            if (null != stock) {
+                addStock(new StockData(symbol));
+                List<HistoricalQuote> list = stock.getHistory();
+                StocksMetaData metaData = new StocksMetaData();
+                metaData.setUrl(stock.getUrl().get(1));
+                determineMetaData(metaData, list, stock.getQuote(true));
+                iRedis.addMonthlyStock(symbol, metaData);
+            }
         } catch (IOException e) {
             deleteStock(symbol);
             log.log(Level.SEVERE, e.getMessage());
@@ -94,12 +95,15 @@ public class StockDataService implements IStockData {
 
         try {
             Stock stock = getHistoryByInterval(symbol, Interval.WEEKLY, getFirstDayOfWeek());
-            List<HistoricalQuote> list = stock.getHistory();
-            iService.addWeekly(symbol, stock.getUrl().get(1));
-            StocksMetaData metaData = new StocksMetaData();
-            determineMetaData(metaData, list, stock.getQuote(true));
-            //  iRedis.addWeeklyStock(symbol, analyseData(DataUtil.loadData(list, symbol), metaData));
-            iRedis.addWeeklyStock(symbol, metaData);
+            if (null != stock) {
+                addStock(new StockData(symbol));
+                List<HistoricalQuote> list = stock.getHistory();
+                StocksMetaData metaData = new StocksMetaData();
+                metaData.setUrl(stock.getUrl().get(1));
+                determineMetaData(metaData, list, stock.getQuote(true));
+                //  iRedis.addWeeklyStock(symbol, analyseData(DataUtil.loadData(list, symbol), metaData));
+                iRedis.addWeeklyStock(symbol, metaData);
+            }
         } catch (IOException e) {
             deleteStock(symbol);
             log.log(Level.SEVERE, e.getMessage());
@@ -114,16 +118,15 @@ public class StockDataService implements IStockData {
             List<HistoricalQuote> list = stock.getHistory();
             StockQuote quote = stock.getQuote();
             StockStats stats = stock.getStats();
-            if (quote != null) {
-                iService.addDaily(symbol, stock.getUrl().get(1));
+            if (quote != null && null != quote.getOpen()) {
+                addStock(new StockData(symbol));
                 StocksMetaData metaData = new StocksMetaData();
+                metaData.setUrl(stock.getUrl().get(1));
                 determineMetaData(metaData, list, quote);
                 iRedis.addDailyStock(symbol, metaData);
                 if (stats.getMarketCap() != null && stats.getPriceBook() != null && stats.getPe() != null) {
-                    financeService.validateStock(stock);
+                    iFinance.validateStock(stock);
                 }
-
-//
             } else {
                 throw new IOException("INVALID STOCK");
             }
@@ -134,16 +137,19 @@ public class StockDataService implements IStockData {
     }
 
     @Override
-    public void updateThreeMonthStock(String symbols) {
+    public void updateThreeMonthStock(StockData data) {
         try {
-            Stock stock = getHistoryByInterval(symbols, Interval.THREEMONTHS, getFirstDayOfWeek());
-            List<HistoricalQuote> list = stock.getHistory();
-            iService.addThreeMonths(symbols, stock.getUrl().get(1));
-            StocksMetaData metaData = new StocksMetaData();
-            determineMetaData(metaData, list, stock.getQuote(true));
-            iRedis.addThreeMonthStock(symbols, metaData);
+            Stock stock = getHistoryByInterval(data.getSymbol(), Interval.THREEMONTHS, getFirstDayOfWeek());
+            if (null != stock) {
+                List<HistoricalQuote> list = stock.getHistory();
+                addStock(data);
+                StocksMetaData metaData = new StocksMetaData();
+                metaData.setUrl(stock.getUrl().get(1));
+                determineMetaData(metaData, list, stock.getQuote(true));
+                iRedis.addThreeMonthStock(data.getSymbol(), metaData);
+            }
         } catch (IOException e) {
-            deleteStock(symbols);
+            deleteStock(data.getSymbol());
             log.log(Level.SEVERE, e.getMessage());
         }
     }
@@ -154,12 +160,22 @@ public class StockDataService implements IStockData {
     }
 
 
+    @Override
+    public List<String> getStocks() {
+        return iService.getStocks().stream().map(StockData::getSymbol).collect(Collectors.toList());
+    }
+
+    private void addStock(StockData data) {
+        if (!iService.isStockPresent(data.getSymbol())) {
+            iService.addStock(data);
+        }
+    }
+
     private void deleteStock(String symbol) {
-        iStock.deleteStock(symbol);
+        // iStock.deleteStock(symbol);
         iRedis.deleteStock(symbol);
         iService.deleteStocks(symbol);
     }
-
 
 
 }

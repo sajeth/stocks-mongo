@@ -11,35 +11,12 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ICacheRepository extends MongoRepository<StockData, String> {
 
-
-    default void addMonthly(String symbol, String url) {
-
-        StockData stockdata = this.findById(symbol).orElse(new StockData(symbol));
-        stockdata.getData()[7] = url;
-        this.save(stockdata);
-    }
-
-    default void addDaily(String symbol, String url) {
-        StockData stockdata = this.findById(symbol).orElse(new StockData(symbol));
-        stockdata.getData()[5] = url;
-        this.save(stockdata);
-    }
-
-    default void addThreeMonths(String symbol, String url) {
-        StockData stockdata = this.findById(symbol).orElse(new StockData(symbol));
-        stockdata.getData()[8] = url;
-        this.save(stockdata);
-    }
-
-
-    default void addWeekly(String symbol, String url) {
-        StockData stockdata = this.findById(symbol).orElse(new StockData(symbol));
-        stockdata.getData()[6] = url;
-        this.save(stockdata);
-    }
-
     default void deleteStock(String symbol) {
         this.findById(symbol).ifPresent(val -> this.delete(val));
+    }
+
+    private StockData findStock(String symbol) {
+        return this.findById(symbol).orElse(new StockData(symbol));
     }
 
 }

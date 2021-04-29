@@ -10,7 +10,6 @@ module stocks.mongo {
     requires spring.beans;
     requires transitive stocks.business;
     requires transitive stocks.candlesticks;
-    requires transitive stocks.core;
     requires transitive stocks.redis;
     requires spring.core;
     requires spring.data.mongodb;
