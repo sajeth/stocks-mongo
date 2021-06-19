@@ -12,7 +12,7 @@ public interface IStockData {
 
     void updateWeeklyStock(String symbols);
 
-    void updateDailyStock(String symbols);
+    void updateDailyStock(StockData symbols);
 
     void updateThreeMonthStock(StockData symbols);
 

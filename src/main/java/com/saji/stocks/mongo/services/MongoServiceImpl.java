@@ -50,4 +50,15 @@ public class MongoServiceImpl implements IService {
         return cacheRepository.existsById(symbol);
     }
 
+    @Override
+    public void updateStock(StockData data) {
+        cacheRepository.findById(data.getSymbol()).ifPresent(
+                val -> {
+                    val = data;
+                    cacheRepository.save(val);
+                }
+        );
+
+    }
+
 }

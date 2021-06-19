@@ -19,4 +19,5 @@ public interface ICacheRepository extends MongoRepository<StockData, String> {
         return this.findById(symbol).orElse(new StockData(symbol));
     }
 
+
 }

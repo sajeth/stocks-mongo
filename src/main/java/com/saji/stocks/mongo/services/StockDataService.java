@@ -18,10 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.math.MathContext;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -76,7 +73,7 @@ public class StockDataService implements IStockData {
 
             Stock stock = getHistoryByInterval(symbol, Interval.MONTHLY, getSecondDayOfMonth());
             if (null != stock) {
-                addStock(new StockData(symbol));
+                //   addStock(new StockData(symbol));
                 List<HistoricalQuote> list = stock.getHistory();
                 StocksMetaData metaData = new StocksMetaData();
                 metaData.setUrl(stock.getUrl().get(1));
@@ -96,7 +93,7 @@ public class StockDataService implements IStockData {
         try {
             Stock stock = getHistoryByInterval(symbol, Interval.WEEKLY, getFirstDayOfWeek());
             if (null != stock) {
-                addStock(new StockData(symbol));
+                //     addStock(new StockData(symbol));
                 List<HistoricalQuote> list = stock.getHistory();
                 StocksMetaData metaData = new StocksMetaData();
                 metaData.setUrl(stock.getUrl().get(1));
@@ -111,15 +108,23 @@ public class StockDataService implements IStockData {
     }
 
     @Override
-    public void updateDailyStock(String symbol) {
-
+    public void updateDailyStock(StockData data) {
+        final String symbol = data.getSymbol();
         try {
+
             Stock stock = getHistoryByInterval(symbol, Interval.DAILY, Calendar.getInstance());
             List<HistoricalQuote> list = stock.getHistory();
             StockQuote quote = stock.getQuote();
             StockStats stats = stock.getStats();
             if (quote != null && null != quote.getOpen()) {
-                addStock(new StockData(symbol));
+                data.setMarketCap(stats.getMarketCap());
+                Optional.ofNullable(stats.getPeg()).ifPresent(val -> data.setPeg(val));
+                Optional.ofNullable(stats.getEBITDA()).ifPresent(val -> data.setEDITDA(val));
+                Optional.ofNullable(stats.getROE()).ifPresent(val -> data.setROE(val));
+                Optional.ofNullable(stock.getDividend().getAnnualYield()).ifPresent(val -> data.setDividend(val));
+                Optional.ofNullable(stats.getPe()).ifPresent(val -> data.setPe(val));
+                Optional.ofNullable(stats.getPriceBook()).ifPresent(val -> data.setPb(val));
+                iService.updateStock(data);
                 StocksMetaData metaData = new StocksMetaData();
                 metaData.setUrl(stock.getUrl().get(1));
                 determineMetaData(metaData, list, quote);

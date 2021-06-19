@@ -16,4 +16,6 @@ public interface IService {
     public List<StockData> getStocks();
 
     public boolean isStockPresent(String symbol);
+
+    void updateStock(StockData data);
 }
